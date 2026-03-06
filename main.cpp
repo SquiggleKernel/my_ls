@@ -15,6 +15,9 @@ int main(int argc, char ** argv) {
     std::uint64_t flags{};
     printDir(dir, flags, path);
 
+    //closing the dir
+    closedir(dir);
+
 
 
     std::cout << '\n';

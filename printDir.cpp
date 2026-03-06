@@ -10,6 +10,8 @@
 #include <vector>
 #include <sys/stat.h>
 #include <bitset>
+#include <pwd.h>
+#include <grp.h>
 
 const char* colorBlue[] {"\x1b[1;34m"};          //for directories
 const char* colorGreen[] {"\x1b[1;36m"};         //for symbolic links
@@ -48,15 +50,15 @@ void printPermissions(__mode_t * mode) {
                 << (ownerPerm.test(1) ? 'w' : '-')
                 << (ownerPerm.test(0) ? 'x' : '-');
 
-    std::bitset<3> groupPerm = *mode>>3 && 0b0111;
-    std::cout   << (ownerPerm.test(2) ? 'r' : '-')
-                << (ownerPerm.test(1) ? 'w' : '-')
-                << (ownerPerm.test(0) ? 'x' : '-');
+    std::bitset<3> groupPerm = *mode>>3 & 0b0111;
+    std::cout   << (groupPerm.test(2) ? 'r' : '-')
+                << (groupPerm.test(1) ? 'w' : '-')
+                << (groupPerm.test(0) ? 'x' : '-');
 
-    std::bitset<3> othersPerm = *mode && 0b0111;
-    std::cout   << (ownerPerm.test(2) ? 'r' : '-')
-                << (ownerPerm.test(1) ? 'w' : '-')
-                << (ownerPerm.test(0) ? 'x' : '-');
+    std::bitset<3> othersPerm = *mode & 0b0111;
+    std::cout   << (othersPerm.test(2) ? 'r' : '-')
+                << (othersPerm.test(1) ? 'w' : '-')
+                << (othersPerm.test(0) ? 'x' : '-');
 
 }
 
@@ -71,11 +73,6 @@ void printDir(DIR *dir, std::uint64_t flags, std::string path) {
 
     std::ranges::sort(entries);
 
-    for (int i{0}; i<entries.size(); i++ ) {
-        std::cout << entries[i] ;
-        std::cout << "  ";
-    }
-    std::cout << '\n';
 
     struct stat st{};
     for (int i{0}; i<entries.size(); i++ ) {
@@ -85,13 +82,22 @@ void printDir(DIR *dir, std::uint64_t flags, std::string path) {
         printFileType(&mode);
         printPermissions(&mode);
 
+        std::cout << " " << st.st_nlink;
 
-        //std::cout << st.
+        // getting owner name and gorup name and printing
+        struct passwd *pw{getpwuid(st.st_uid)};
+        if (pw)     std::cout << " " << pw->pw_name;
+        else        std::cout << " " << st.st_uid;
 
+        struct group *gr{getgrgid(st.st_gid)};
+        if (gr)     std::cout << " " << gr->gr_name;
+        else        std::cout << " " << st.st_gid;
 
-        std::cout << "   " <<entries[i] <<'\n';
+        std::cout << " "<< st.st_size << '\t';
 
+        std::cout << " " << st.st_atim.tv_sec;
 
+        std::cout << " " <<entries[i] <<'\n';
     }
 
 
