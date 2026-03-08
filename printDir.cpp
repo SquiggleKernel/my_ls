@@ -12,9 +12,15 @@
 #include <bitset>
 #include <pwd.h>
 #include <grp.h>
+#include <ctime>
 
-const char* colorBlue[] {"\x1b[1;34m"};          //for directories
-const char* colorGreen[] {"\x1b[1;36m"};         //for symbolic links
+
+//not current priority
+const char* colorBlue[] {"\x1b[1;34m"};             //for directories(Bold Blue)
+const char* colorGreen[] {"\x1b[1;36m"};            //for executable files
+const char* colorCyan[] {"\x1b[0;46m"};             //for symbolic links
+const char* colorRed[] {"\x1b[0;41m"};              // for archived files with .zip etc. files
+const char* colorYello[] {"\x1b[0;93m"};            // for FIFO
 const char* colorReset[]  {"\x1b[0m"};           //for resetting
 
 constexpr char isDir{0b0100};
@@ -26,12 +32,22 @@ constexpr char isFifo{0b0001};
 constexpr char isSock{0b1100};
 
 
+struct lsLineStructure {
+    char permissions[10];
+    __nlink_t hardlinks{};
+
+    std::string ownerName{};
+    std::string groupName{};
+    std::size_t fileSize{};
+
+    char fmtTime[20];
+    std::string name;
+};
 
 
-
-void printFileType(__mode_t * mode) {
+void printFileType(const __mode_t * mode) {
     // checking file type;
-    char type = (*mode>>12) & 0x0f;
+    char type = static_cast<char>((*mode>>12) & 0x0f);
     switch (type) {
         case isDir:       std::cout << 'd'; break;
         case isLnk:       std::cout << 'l'; break;
@@ -44,7 +60,7 @@ void printFileType(__mode_t * mode) {
     }
 }
 
-void printPermissions(__mode_t * mode) {
+void printPermissions(const __mode_t * mode) {
     std::bitset<3> ownerPerm = (*mode>>6 & 0b0111);
     std::cout   << (ownerPerm.test(2) ? 'r' : '-')
                 << (ownerPerm.test(1) ? 'w' : '-')
@@ -68,7 +84,7 @@ void printDir(DIR *dir, std::uint64_t flags, std::string path) {
 
     //storing entries in a vector
     for (int i{0}; (entry = readdir(dir)) != nullptr; i++) {
-        entries.push_back(entry->d_name);
+        entries.emplace_back(entry->d_name);
     }
 
     std::ranges::sort(entries);
@@ -84,7 +100,7 @@ void printDir(DIR *dir, std::uint64_t flags, std::string path) {
 
         std::cout << " " << st.st_nlink;
 
-        // getting owner name and gorup name and printing
+        // getting owner name and group name and printing
         struct passwd *pw{getpwuid(st.st_uid)};
         if (pw)     std::cout << " " << pw->pw_name;
         else        std::cout << " " << st.st_uid;
@@ -95,7 +111,14 @@ void printDir(DIR *dir, std::uint64_t flags, std::string path) {
 
         std::cout << " "<< st.st_size << '\t';
 
-        std::cout << " " << st.st_atim.tv_sec;
+        // converting time since epoch 0 given in sec to normal date format
+        struct tm *timeInfo{};
+        char timeString[20];
+
+        timeInfo  = localtime(&st.st_atim.tv_sec);
+        strftime(timeString, 20,  "%b %d %H:%M", timeInfo);
+        std::cout << timeString ;
+
 
         std::cout << " " <<entries[i] <<'\n';
     }
