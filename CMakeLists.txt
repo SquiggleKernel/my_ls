@@ -5,4 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(my_ls main.cpp
         printDir.cpp
+        printDir.h
+        printDirSubordiante.cpp
 )

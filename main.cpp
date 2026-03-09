@@ -1,7 +1,7 @@
-#include <iostream>
-#include <dirent.h>
-#include <cstdint>
-void printDir(DIR *dir, std::uint64_t flags, std::string path);
+#include "printDir.h"
+
+
+
 
 int main(int argc, char ** argv) {
 
@@ -11,8 +11,10 @@ int main(int argc, char ** argv) {
         return 1;
     }
     std::string path = argv[1];  // default to current dir
+
     DIR *dir = opendir((path).c_str());
     std::uint64_t flags{};
+
     printDir(dir, flags, path);
 
     //closing the dir
