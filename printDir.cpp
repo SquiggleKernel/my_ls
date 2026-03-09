@@ -5,7 +5,7 @@
 #include "printDir.h"
 
 
-void printDir(DIR *dir, std::uint64_t flags, std::string path) {
+void printDir(DIR *dir,[[maybe_unused]] std::uint64_t flags, const std::string & path) {
     struct dirent *entry{};
     std::vector<std::string> entries{};
     std::vector<LsLineStructure> lines{};
@@ -20,12 +20,13 @@ void printDir(DIR *dir, std::uint64_t flags, std::string path) {
 
     struct stat st{};
     LsLineStructure temp{};
-    for (int i{0}; i<entries.size(); i++ ) {
+    for (auto i{0}; static_cast<unsigned long>(i) < entries.size(); i++ ) {
         lstat((path + "/" + entries[i]).c_str(), &st);
         __mode_t mode = st.st_mode;
 
         temp.permissions[0] = printFileType(&mode);
         memcpy(temp.permissions + 1, printPermissions(&mode), 9);
+        temp.permissions[10] = '\00';
         // temp.permissions[1] = printPermissions(&mode);
 
         temp.hardlinks = st.st_nlink;
@@ -37,7 +38,7 @@ void printDir(DIR *dir, std::uint64_t flags, std::string path) {
 
         struct group *gr{getgrgid(st.st_gid)};
         if (gr)     temp.groupName =  gr->gr_name;
-        else        temp.groupName =  st.st_gid;
+        else        temp.groupName =  std::to_string(st.st_gid);
 
         temp.fileSize = st.st_size;
 
@@ -53,17 +54,20 @@ void printDir(DIR *dir, std::uint64_t flags, std::string path) {
         temp.name = entries[i] ;
         lines.emplace_back(temp);
     }
-    Widths columsWidths{calculateMaxWidths(lines)};
+    Widths columnsWidths{calculateMaxWidths(lines)};
 
     int index{0};
-    for (const auto i : lines) {
-        std::cout << i.permissions << " ";
-        std::cout << std::setw(columsWidths.links) << i.hardlinks << " ";
-        std::cout << std::setw(columsWidths.owner) << i.ownerName << " ";
-        std::cout << std::setw(columsWidths.group) << i.groupName << " ";
-        std::cout << std::setw(columsWidths.size) << i.fileSize << " ";
-        std::cout << std::setw(columsWidths.time) << i.fmtTime << " ";
+    for (const auto& i : lines) {
+        std::cout << i.permissions << " ";   std::cout << std::flush;
+        std::cout << std::setw(columnsWidths.links) << i.hardlinks << " ";
+        std::cout << std::setw(columnsWidths.owner) << i.ownerName << " ";
+        std::cout << std::setw(columnsWidths.group) << i.groupName << " ";
+        std::cout << std::setw(columnsWidths.size) << i.fileSize << " ";
+        std::cout << std::setw(columnsWidths.time) << i.fmtTime << " ";
+
+
         std::cout << entries[index] << '\n';
+
         index++;
     }
 

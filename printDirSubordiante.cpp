@@ -41,11 +41,11 @@ Widths calculateMaxWidths(const std::vector<LsLineStructure>& lines) {
     Widths maxW;
 
     for (const auto& line : lines) {
-        maxW.links = std::max(maxW.links, std::to_string(line.hardlinks).length());
-        maxW.owner = std::max(maxW.owner, line.ownerName.length());
-        maxW.group = std::max(maxW.group, line.groupName.length());
-        maxW.size  = std::max(maxW.size,  std::to_string(line.fileSize).length());
-        maxW.time  = std::max(maxW.time,  line.fmtTime.length());
+        maxW.links = std::max<int>(maxW.links, std::to_string(line.hardlinks).length());
+        maxW.owner = std::max<int>(maxW.owner, line.ownerName.length());
+        maxW.group = std::max<int>(maxW.group, line.groupName.length());
+        maxW.size  = std::max<int>(maxW.size,  std::to_string(line.fileSize).length());
+        maxW.time  = std::max<int>(maxW.time,  line.fmtTime.length());
     }
 
     return maxW;
