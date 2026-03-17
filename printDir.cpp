@@ -68,7 +68,7 @@ void printDir(DIR *dir,[[maybe_unused]] std::uint64_t flags, const std::string &
         std::cout << std::setw(columnsWidths.size) << i.fileSize << ' ';
         std::cout << std::setw(columnsWidths.time) << i.fmtTime << ' ';
 
-        printColor(i);
+        printColor(i.permissions);
         std::cout << entries[index] ;
         resetColor();
 

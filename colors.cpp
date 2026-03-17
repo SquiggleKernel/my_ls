@@ -5,17 +5,37 @@
 
 
 //permission have format drwxrwxrwx  1st rwx is for owner then grp then other 11th char is \n;
-void printColor(const LsLineStructure& i) {
-    if (i.permissions[0] == 'd')
-        std::cout << colorBlue ;
-    else if (i.permissions[0] == 'l')
-        std::cout << colorCyan;
-    else if (i.permissions[0] == 's')
-        std::cout << colorPurple ;
-    else if (i.permissions[0] == 'p')
-        std::cout << colorYellow ;
-    else if (i.isExecutable)
-        std::cout << colorGreen ;
+void printColor(const char (&perms)[11]) {
+    if (perms[0] == 'l') {
+        std::cout << colorSymlink;
+    }
+    else if (perms[0] == 'p') {
+        std::cout << colorPipe;
+    }
+    else if (perms[0] == 's') {
+        std::cout << colorSocket;
+    }
+    else if (perms[0] == 'b') {
+        std::cout << colorBlockDevice;
+    }
+    else if (perms[0] == 'c') {
+        std::cout << colorCharDevice;
+    }
+    else if (perms[0] == 'd') {
+        if (perms[9] == 's') {
+            std::cout << ((perms[8]=='w') ? colorOtherWritableSticky : colorSticky);
+        }
+        else
+            std::cout << ((perms[8] =='w') ? colorOtherWritable : colorDir);
+    }
+
+    else if (perms[3] == 's' || perms[3] == 'S') {
+        std::cout << colorSuid;
+    }
+    else if (perms[6] == 's' || perms[6] == 'S') {
+        std::cout << colorSgid;
+    }
+
 }
 
 void resetColor() {

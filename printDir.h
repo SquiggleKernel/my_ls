@@ -29,14 +29,19 @@ constexpr std::bitset<8> isSize{0b01000000};
 constexpr std::bitset<8> isInode{0xff};
 
 
-//not current priority
-constexpr char colorBlue[] {"\x1b[1;34m"};              //for directories(Bold Blue)
-constexpr char colorPurple[] {"\x1b[1;35m"};            // for Unix Socket
-constexpr char colorGreen[] {"\x1b[1;92m"};             //for executable files
-constexpr char colorCyan[] {"\x1b[1;36m"};              //for symbolic links
-constexpr char colorRed[] {"\x1b[0;41m"};               // for archived files with .zip etc. files
-constexpr char colorYellow[] {"\x1b[0;93m"};            // for FIFO
-constexpr char colorReset[]  {"\x1b[0m"};               //for resetting
+constexpr char colorDir[] {"\x1b[1;34m"};                       //for directories(Bold Blue)
+constexpr char colorSymlink[] {"\x1b[1;36m"};                   // bright Cyan
+constexpr char colorPipe[] {"\x1b[0;33m"};                      // Yellow
+constexpr char colorSocket[] {"\x1b[1;35m"};                    // bright Magenta
+constexpr char colorBlockDevice[] {"\x1b[1;33m"};               // bright Yellow
+constexpr char colorCharDevice[] {"\x1b[1;33m"};                // bright Yellow
+constexpr char colorExecutable[] {"\x1b[01;32m"};               // bright Green
+constexpr char colorSuid[] {"\x1b[0;37;41m"};                   // white on red
+constexpr char colorSgid[] {"\x1b[0;30;43m"};                   // black on yellow
+constexpr char colorSticky[] {"\x1b[0;37;44m"};                 // back on blue
+constexpr char colorOtherWritable[] {"\x1b[0;34;42m"};          // blue on green
+constexpr char colorOtherWritableSticky[] {"\x1b[0;3;42m"};    // black on green
+constexpr char colorReset[]  {"\x1b[0m"};                       //for resetting
 
 constexpr char isDir{0b0100};
 constexpr char isReg{0b1000};
@@ -75,7 +80,7 @@ char printFileType(const __mode_t * mode);
 char* printPermissions(const __mode_t * mode);
 Widths calculateMaxWidths(const std::vector<LsLineStructure>& lines);
 char fileClassifier(char x);
-void printColor(const LsLineStructure& i);
+void printColor(const char (&permissions)[11]);
 void resetColor();
 
 
