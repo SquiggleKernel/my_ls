@@ -9,4 +9,5 @@ add_executable(my_ls main.cpp
         printDir.cpp
         printDir.h
         printDirSubordiante.cpp
+        colors.cpp
 )

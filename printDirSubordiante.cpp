@@ -19,21 +19,18 @@ char printFileType(const __mode_t * mode) {
 }
 
 char* printPermissions(const __mode_t * mode) {
-    std::bitset<3> ownerPerm = (*mode>>6 & 0b0111);
     static char permissions[9];
-    permissions[0] = (ownerPerm.test(2) ? 'r' : '-');
-    permissions[1] = (ownerPerm.test(1) ? 'w' : '-');
-    permissions[2] = (ownerPerm.test(0) ? 'x' : '-');
+    permissions[0] = (*mode&S_IRUSR ? 'r' : '-');
+    permissions[1] = (*mode&S_IWUSR ? 'w' : '-');
+    permissions[2] = (*mode&S_ISUID ? (*mode&S_IXUSR ? 's' : 'S') : (*mode&S_IXUSR ? 'x' : '-'));
 
-    std::bitset<3> groupPerm = *mode>>3 & 0b0111;
-    permissions[3] = (groupPerm.test(2) ? 'r' : '-');
-    permissions[4] = (groupPerm.test(1) ? 'w' : '-');
-    permissions[5] = (groupPerm.test(0) ? 'x' : '-');
+    permissions[3] = (*mode&S_IRGRP ? 'r' : '-');
+    permissions[4] = (*mode&S_IWUSR ? 'w' : '-');
+    permissions[5] = (*mode&S_ISGID ? (*mode&S_IXGRP ? 's' : 'S') : (*mode&S_IXGRP ? 'x' : '-'));
 
-    std::bitset<3> othersPerm = *mode & 0b0111;
-    permissions[6] = (othersPerm.test(2) ? 'r' : '-');
-    permissions[7] = (othersPerm.test(1) ? 'w' : '-');
-    permissions[8] = (othersPerm.test(0) ? 'x' : '-');
+    permissions[6] = (*mode&S_IROTH ? 'r' : '-');
+    permissions[7] = (*mode&S_IWOTH ? 'w' : '-');
+    permissions[8] = (*mode&S_ISVTX ? (*mode&S_IXOTH ? 't' : 'T') : (*mode&S_IXOTH ? 'x' : '-'));
 
     return permissions;
 }
@@ -50,3 +47,15 @@ Widths calculateMaxWidths(const std::vector<LsLineStructure>& lines) {
 
     return maxW;
 }
+
+
+char fileClassifier(char x) {
+    switch (x) {
+        case 'd': return '/';
+        case 'l': return '@';
+        case 's': return '=';
+        case 'p': return '|';
+        default: return ' ';
+    }
+}
+

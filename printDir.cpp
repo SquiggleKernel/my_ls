@@ -11,7 +11,7 @@ void printDir(DIR *dir,[[maybe_unused]] std::uint64_t flags, const std::string &
     std::vector<LsLineStructure> lines{};
 
     //storing entries in a vector
-    for (int i{0}; (entry = readdir(dir)) != nullptr; i++) {
+    while ((entry = readdir(dir)) != nullptr) {
         entries.emplace_back(entry->d_name);
     }
 
@@ -21,13 +21,16 @@ void printDir(DIR *dir,[[maybe_unused]] std::uint64_t flags, const std::string &
     struct stat st{};
     LsLineStructure temp{};
     for (auto i{0}; static_cast<unsigned long>(i) < entries.size(); i++ ) {
+        temp = {};
         lstat((path + "/" + entries[i]).c_str(), &st);
+        temp.inodeNo = st.st_ino;
         __mode_t mode = st.st_mode;
 
         temp.permissions[0] = printFileType(&mode);
         memcpy(temp.permissions + 1, printPermissions(&mode), 9);
         temp.permissions[10] = '\00';
-        // temp.permissions[1] = printPermissions(&mode);
+
+        if (mode & S_IXUSR) temp.isExecutable = true;
 
         temp.hardlinks = st.st_nlink;
 
@@ -58,16 +61,19 @@ void printDir(DIR *dir,[[maybe_unused]] std::uint64_t flags, const std::string &
 
     int index{0};
     for (const auto& i : lines) {
-        std::cout << i.permissions << " ";   std::cout << std::flush;
-        std::cout << std::setw(columnsWidths.links) << i.hardlinks << " ";
-        std::cout << std::setw(columnsWidths.owner) << i.ownerName << " ";
-        std::cout << std::setw(columnsWidths.group) << i.groupName << " ";
-        std::cout << std::setw(columnsWidths.size) << i.fileSize << " ";
-        std::cout << std::setw(columnsWidths.time) << i.fmtTime << " ";
+        std::cout << i.permissions << ' ';
+        std::cout << std::setw(columnsWidths.links) << i.hardlinks << ' ';
+        std::cout << std::setw(columnsWidths.owner) << i.ownerName << ' ';
+        std::cout << std::setw(columnsWidths.group) << i.groupName << ' ';
+        std::cout << std::setw(columnsWidths.size) << i.fileSize << ' ';
+        std::cout << std::setw(columnsWidths.time) << i.fmtTime << ' ';
 
+        printColor(i);
+        std::cout << entries[index] ;
+        resetColor();
 
-        std::cout << entries[index] << '\n';
-
+        //classifier
+        std::cout << fileClassifier(i.permissions[0]) << '\n';
         index++;
     }
 
