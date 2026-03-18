@@ -5,7 +5,7 @@
 #include "printDir.h"
 
 
-void printDir(DIR *dir,[[maybe_unused]] std::uint64_t flags, const std::string & path) {
+void printDir(DIR *dir, std::bitset<noOfFlags> flags, const std::string & path, int outputWidth) {
     struct dirent *entry{};
     std::vector<std::string> entries{};
     std::vector<LsLineStructure> lines{};
@@ -15,12 +15,20 @@ void printDir(DIR *dir,[[maybe_unused]] std::uint64_t flags, const std::string &
         entries.emplace_back(entry->d_name);
     }
 
-    std::ranges::sort(entries);
+    if ((flags & isReverse )== isReverse) {
+        std::ranges::sort(entries, std::ranges::greater{});
+    }
+    else std::ranges::sort(entries);
+
 
 
     struct stat st{};
     LsLineStructure temp{};
     for (auto i{0}; static_cast<unsigned long>(i) < entries.size(); i++ ) {
+        if (entries[i][0] == '.' && (flags &isAll)!= isAll ) {
+            continue;
+        }
+
         temp = {};
         lstat((path + "/" + entries[i]).c_str(), &st);
         temp.inodeNo = st.st_ino;
@@ -60,21 +68,52 @@ void printDir(DIR *dir,[[maybe_unused]] std::uint64_t flags, const std::string &
     Widths columnsWidths{calculateMaxWidths(lines)};
 
     int index{0};
+    int maxEntriesInLine{outputWidth/columnsWidths.name};
+    if (((flags&isInode)==isInode)) {
+        maxEntriesInLine = outputWidth/(columnsWidths.name + columnsWidths.inode +1);
+    }
     for (const auto& i : lines) {
-        std::cout << i.permissions << ' ';
-        std::cout << std::setw(columnsWidths.links) << i.hardlinks << ' ';
-        std::cout << std::setw(columnsWidths.owner) << i.ownerName << ' ';
-        std::cout << std::setw(columnsWidths.group) << i.groupName << ' ';
-        std::cout << std::setw(columnsWidths.size) << i.fileSize << ' ';
-        std::cout << std::setw(columnsWidths.time) << i.fmtTime << ' ';
+        if ((flags&isInode)==isInode)
+            std::cout << std::setw(columnsWidths.inode) << i.inodeNo << ' ';
 
-        printColor(i.permissions);
-        std::cout << entries[index] ;
-        resetColor();
+        if ((flags&isList)==isList) {
+            std::cout << i.permissions << ' ';
+            std::cout << std::setw(columnsWidths.links) << i.hardlinks << ' ';
+            std::cout << std::setw(columnsWidths.owner) << i.ownerName << ' ';
+            std::cout << std::setw(columnsWidths.group) << i.groupName << ' ';
+        }
+        if ((flags&isList)==isList || ((flags&isSize)==isSize))
+            std::cout << std::setw(columnsWidths.size) << i.fileSize << ' ';
+        if ((flags&isList)==isList)
+            std::cout << std::setw(columnsWidths.time) << i.fmtTime << ' ';
+
+        if ((flags & isColor)== isColor )
+            printColor(i.permissions);
+
+        std::cout << i.name;
+        if ((flags & isColor)== isColor )
+            resetColor();
+
 
         //classifier
-        std::cout << fileClassifier(i.permissions[0]) << '\n';
-        index++;
+        if ((flags & isClassify)== isClassify)
+            std::cout << fileClassifier(i.permissions[0], i.permissions[3]) ;
+        if ((flags &isList)==isList) {
+            std::cout << '\n';
+        }
+
+
+
+        if ((flags&isList)!=isList) {
+
+            int actualPadding = (columnsWidths.name + 2) - static_cast<int>(i.name.length());
+            for (int s = 0; s < actualPadding; ++s) {
+                std::cout << ' ';
+            }
+            if (++index%maxEntriesInLine == 0) {
+                std::cout << '\n';
+            }
+        }
     }
 
 }

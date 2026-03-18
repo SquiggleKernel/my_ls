@@ -3,6 +3,20 @@
 //
 #include "printDir.h"
 
+
+int getTerminalWidth() {
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    if (isatty(STDOUT_FILENO)) {
+        if (w.ws_col<10 || w.ws_col>80)
+            return 80;
+        else
+            return w.ws_col;
+    }
+    else
+        return 80;
+}
+
 char printFileType(const __mode_t * mode) {
     // checking file type;
     char type = static_cast<char>((*mode>>12) & 0x0f);
@@ -38,24 +52,31 @@ Widths calculateMaxWidths(const std::vector<LsLineStructure>& lines) {
     Widths maxW;
 
     for (const auto& line : lines) {
+        maxW.inode = std::max<int>(maxW.inode, std::to_string(line.inodeNo).length());
         maxW.links = std::max<int>(maxW.links, std::to_string(line.hardlinks).length());
         maxW.owner = std::max<int>(maxW.owner, line.ownerName.length());
         maxW.group = std::max<int>(maxW.group, line.groupName.length());
         maxW.size  = std::max<int>(maxW.size,  std::to_string(line.fileSize).length());
         maxW.time  = std::max<int>(maxW.time,  line.fmtTime.length());
+        maxW.name  = std::max<int>(maxW.name,  line.name.length());
     }
 
     return maxW;
 }
 
 
-char fileClassifier(char x) {
-    switch (x) {
+char fileClassifier(char d, char x) {
+    switch (d) {
         case 'd': return '/';
         case 'l': return '@';
         case 's': return '=';
         case 'p': return '|';
-        default: return ' ';
+        default:
+            if (x == 'x')
+                return '*';
+            else
+                return ' ';
     }
+
 }
 

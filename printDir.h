@@ -18,15 +18,21 @@
 #include <ctime>
 #include <cstring>
 #include <iomanip>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
-constexpr std::bitset<8> isColor{0b00000001};
-constexpr std::bitset<8> isList{0b00000010};
-constexpr std::bitset<8> isAll{0b00000100};
-constexpr std::bitset<8> isReverse{0b00001000};
-constexpr std::bitset<8> isHumanReadable{0b00010000};
-constexpr std::bitset<8> isTime{0b00100000};
-constexpr std::bitset<8> isSize{0b01000000};
-constexpr std::bitset<8> isInode{0xff};
+constexpr int noOfFlags{9};
+
+constexpr std::bitset<noOfFlags> isColor{0b000000001};
+constexpr std::bitset<noOfFlags> isList{0b000000010};
+constexpr std::bitset<noOfFlags> isAll{0b000000100};
+constexpr std::bitset<noOfFlags> isReverse{0b000001000};
+constexpr std::bitset<noOfFlags> isHumanReadable{0b000010000};
+constexpr std::bitset<noOfFlags> isTime{0b000100000};
+constexpr std::bitset<noOfFlags> isSize{0b001000000};
+constexpr std::bitset<noOfFlags> isInode{1<<8};
+constexpr std::bitset<noOfFlags> isClassify{0x100};
+
 
 
 constexpr char colorDir[] {"\x1b[1;34m"};                       //for directories(Bold Blue)
@@ -68,20 +74,24 @@ struct LsLineStructure {
 };
 
 struct Widths {
-    int links = 0;
-    int owner = 0;
-    int group = 0;
-    int size  = 0;
-    int time  = 0;
+    int inode{};
+    int links{};
+    int owner{};
+    int group{};
+    int size{};
+    int time{};
+    int name{};
 };
 
-void printDir(DIR *dir,[[maybe_unused]] std::uint64_t flags, const std::string & path);
+void printDir(DIR *dir, std::bitset<noOfFlags> flags, const std::string & path, int outputWidth);
 char printFileType(const __mode_t * mode);
 char* printPermissions(const __mode_t * mode);
 Widths calculateMaxWidths(const std::vector<LsLineStructure>& lines);
-char fileClassifier(char x);
+char fileClassifier(char d, char x);
 void printColor(const char (&permissions)[11]);
 void resetColor();
+int getflags(int argc,char ** argv, std::bitset<noOfFlags>& flags, std::string& path);
+int getTerminalWidth();
 
 
 #endif //MY_LS_PRINTDIR_H

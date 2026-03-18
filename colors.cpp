@@ -22,7 +22,7 @@ void printColor(const char (&perms)[11]) {
         std::cout << colorCharDevice;
     }
     else if (perms[0] == 'd') {
-        if (perms[9] == 's') {
+        if (perms[9] == 't') {
             std::cout << ((perms[8]=='w') ? colorOtherWritableSticky : colorSticky);
         }
         else
@@ -35,7 +35,9 @@ void printColor(const char (&perms)[11]) {
     else if (perms[6] == 's' || perms[6] == 'S') {
         std::cout << colorSgid;
     }
-
+    else if (perms[3] == 'x') {
+        std::cout << colorExecutable;
+    }
 }
 
 void resetColor() {

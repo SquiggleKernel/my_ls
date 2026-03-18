@@ -5,17 +5,22 @@
 
 int main(int argc, char ** argv) {
 
-    //opendir(x) → readdir(x) →  sort(x) → stat() → switch() → printf() → close-dir()
-    if (argc < 2 ) {
-        std::cerr << "[Usage] : "<< /*argv[0]*/"my_ls"  << " <./directoryOrFile>";
+    //opendir(x) → readdir(x) →  sort(x) → stat(x) → switch(x) → printf(x) → close-dir(x)
+
+    std::string path;
+
+    int outputWidth{getTerminalWidth()};
+
+
+
+
+    std::bitset<noOfFlags> flags{};
+    if (getflags(argc, argv, flags, path) != 0 ) {
         return 1;
     }
-    std::string path = argv[1];  // default to current dir
-
     DIR *dir = opendir((path).c_str());
-    std::uint64_t flags{};
 
-    printDir(dir, flags, path);
+    printDir(dir, flags, path, outputWidth);
 
     //closing the dir
     closedir(dir);
